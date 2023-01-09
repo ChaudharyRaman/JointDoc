@@ -9,6 +9,7 @@ import './EditorStyles.css'
 
 import {io} from 'socket.io-client'
 import { useState } from 'react'
+import { useParams } from 'react-router-dom'
 
 
 const ENDPOINT = 'http://localhost:5000'
@@ -39,6 +40,8 @@ const Editor = () => {
     const [socket,setSocket] = useState()
     const [quill,setQuill] = useState()
 
+    const {id: documentId} = useParams();
+
     useEffect(()=>{
         const s = io(ENDPOINT)
         setSocket(s)
@@ -50,6 +53,34 @@ const Editor = () => {
         }
     },[])
 
+    useEffect(()=>{
+        if(socket == null || quill == null)return;
+
+        socket.once('load-document',document=>{
+            quill.setContents(document)
+            quill.enable()
+        })
+
+        socket.emit('get-document',documentId);
+
+    },[socket,quill,documentId])
+
+    useEffect(()=>{
+
+        if(socket == null || quill == null ) return
+
+        const handler = (delta)=>{
+            quill.updateContents(delta)
+        }
+
+        socket.on('receive-changes',handler)
+
+        return ()=>{
+            socket.off("receive-changes",handler)
+        }
+    },[socket,quill])
+    
+    
     useEffect(()=>{
 
         if(socket == null || quill == null ) return
@@ -76,6 +107,8 @@ const Editor = () => {
             theme: 'snow',
             modules: { toolbar: TOOLBAR_OPTIONS }
         })
+        q.disable()
+        q.setText('Loading...')
         setQuill(q)
 
     }, [])
