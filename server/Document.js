@@ -1,4 +1,5 @@
-import { Schema, model } from "mongoose";
+// import { Schema, model } from "mongoose";
+const {Schema , model} = require('mongoose')
 
 const DocumentSchema = Schema({
     _id:String,
@@ -7,4 +8,4 @@ const DocumentSchema = Schema({
 
 const Document = model('Document',DocumentSchema);
 
-module.exports = {Document};
+module.exports = Document;
