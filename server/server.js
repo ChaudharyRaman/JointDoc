@@ -16,7 +16,6 @@ const io = new Server(PORT, {
     }
 })
 
-const defaultValue = ""
 
 io.on('connection', (socket) => {
     console.log('New client connected');
@@ -25,6 +24,7 @@ io.on('connection', (socket) => {
         const document = await findOrCreateDocument(documentId)
         socket.join(documentId)
 
+        // console.log(document.data);
         socket.emit('load-document', document.data)
 
         socket.on('send-changes', (delta) => {
@@ -33,6 +33,9 @@ io.on('connection', (socket) => {
 
         socket.on("save-document",async(data)=>{
             await Document.findByIdAndUpdate(documentId,{data})
+        })
+        socket.on('send-cursor',(range)=>{
+            socket.broadcast.to(documentId).emit('receive-cursor',range)
         })
     })
 
@@ -44,7 +47,7 @@ async function findOrCreateDocument(id){
 
     const document = await Document.findById(id);
     if(!document){
-        return await Document.create({_id:id, data:defaultValue})
+        return await Document.create({_id:id, data:""})
     }else{
         return document;
     }
